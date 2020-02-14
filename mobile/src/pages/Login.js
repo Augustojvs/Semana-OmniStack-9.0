@@ -1,21 +1,39 @@
-import React, { useState } from 'react';
-import { View, KeyboardAvoidingView ,Image, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+//import AsyncStorage from '@react-native-community/async-storage';
+import { View, AsyncStorage, KeyboardAvoidingView ,Image, StyleSheet, Text, TextInput, TouchableOpacity} from 'react-native';
 
 import api from '../services/api';
 
 import logo from '../assets/logo.png';
 
-export default function Login(){
+export default function Login({ navigation }){
     const [email, setEmail] = useState('');
     const [techs, setTechs] = useState('');
 
+    useEffect(() => {
+        AsyncStorage.getItem('user').then(user =>{
+            if(user){
+                navigation.navigate('List');
+            }
+        })
+    }, []);
+
     async function handleSubmit(){
-        console.log(email, techs);
+        const response = await api.post('/sessions', {
+            email
+        })
+
+        const { _id } = response.data;
+
+        await AsyncStorage.setItem('user', _id);
+        await AsyncStorage.setItem('techs', techs);
+
+        navigation.navigate('List');
     }
 
     return (
     <KeyboardAvoidingView behavior="padding" style={styles.container}>
-        <Image source={logo} />
+        <Image style={styles.logo} source={logo} />
 
         <View style={styles.form}>
             <Text style={styles.label}>SEU E-MAIL *</Text>
@@ -56,6 +74,12 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
 
+    logo: {
+        height: 50,
+        resizeMode: 'contain',
+        alignSelf: 'center',
+    },
+
     form: {
         alignSelf: "stretch",
         paddingHorizontal: 30,
@@ -70,7 +94,7 @@ const styles = StyleSheet.create({
 
     input: {
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: '#ddd',  
         paddingHorizontal: 20,
         fontSize: 16,
         color: '#444',
